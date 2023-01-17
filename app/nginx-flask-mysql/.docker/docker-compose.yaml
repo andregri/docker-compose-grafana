@@ -1,22 +1,10 @@
----
-version: "3"
-
 services:
-  flog:
-    image: mingrammer/flog
-    command: -f json -d 1s -l
-
-  # Example nginx - flask - mysql app from:
-  # https://github.com/docker/awesome-compose/blob/master/nginx-flask-mysql/compose.yaml
   db:
-    # We use a mariadb image which supports both amd64 & arm64 architecture
     image: mariadb:10-focal
-    # If you really want to use MySQL, uncomment the following line
-    #image: mysql:8
     command: '--default-authentication-plugin=mysql_native_password'
     restart: always
     healthcheck:
-      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 --password="$$(cat /run/secrets/db-password)" --silent']
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
       interval: 3s
       retries: 5
       start_period: 30s
@@ -35,9 +23,11 @@ services:
 
   backend:
     build:
-      context: nginx-flask-mysql/backend
-      target: builder
+      context: backend
+      target: dev-envs
     restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     secrets:
       - db-password
     ports:
@@ -50,7 +40,7 @@ services:
         condition: service_healthy
 
   proxy:
-    build: nginx-flask-mysql/proxy
+    build: proxy
     restart: always
     ports:
       - 80:80
@@ -64,7 +54,7 @@ volumes:
 
 secrets:
   db-password:
-    file: nginx-flask-mysql/db/password.txt
+    file: db/password.txt
 
 networks:
   backnet:
