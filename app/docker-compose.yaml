@@ -64,6 +64,8 @@ services:
     expose:
       - 9113
     command: -nginx.scrape-uri=http://proxy:80/stub_status
+    depends_on:
+      - proxy
     networks:
       - frontnet
 

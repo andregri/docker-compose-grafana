@@ -2,6 +2,9 @@ import os
 from flask import Flask
 import mysql.connector
 
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from prometheus_client import make_wsgi_app
+
 
 class DBManager:
     def __init__(self, database='example', host="db", user="root", password_file=None):
@@ -30,10 +33,16 @@ class DBManager:
         return rec
 
 
-server = Flask(__name__)
+app = Flask(__name__)
+
+# Add prometheus wsgi middleware to route /metrics requests
+app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+    '/metrics': make_wsgi_app()
+})
+
 conn = None
 
-@server.route('/')
+@app.route('/')
 def listBlog():
     global conn
     if not conn:
@@ -48,4 +57,4 @@ def listBlog():
 
 
 if __name__ == '__main__':
-    server.run()
+    app.run()
