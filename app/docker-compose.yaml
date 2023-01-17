@@ -59,6 +59,14 @@ services:
     networks:
       - frontnet
 
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:0.10.0
+    expose:
+      - 9113
+    command: -nginx.scrape-uri=http://proxy:80/stub_status
+    networks:
+      - frontnet
+
 volumes:
   db-data:
 

@@ -5,6 +5,8 @@ networks:
   loki:
   monitoring:
     driver: bridge
+  app_frontnet:
+    external: true
 
 services:
   read:
@@ -234,6 +236,7 @@ services:
       - 9090
     networks:
       - monitoring
+      - app_frontnet
 
   pushgateway:
     image: prom/pushgateway
