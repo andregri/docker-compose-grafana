@@ -1,18 +1,5 @@
 # Grafana on docker-compose
 
-- prometheus client library - https://github.com/prometheus/client_python
-
-## Alerting
-
-- CPU usage:
-```
-100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
-```
-- Disk Usage
-```
-max(100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes)) by (instance)
-```
-
 ## Deploy locally
 ```bash
 git clone https://github.com/andregri/docker-compose-grafana.git
@@ -26,6 +13,17 @@ docker-compose -f docker-compose-grafana/app/docker-compose.yaml up -d
 ```tf
 terraform init
 terraform apply
+```
+
+## Alerting example
+
+- CPU usage:
+```
+100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+```
+- Disk Usage
+```
+max(100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes)) by (instance)
 ```
 
 ## pushgateway example
