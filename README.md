@@ -1,5 +1,7 @@
 # Grafana on docker-compose
 
+- https://github.com/prometheus/client_python
+
 ## Deploy locally
 ```bash
 git clone https://github.com/andregri/docker-compose-grafana.git
