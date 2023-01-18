@@ -2,6 +2,15 @@
 
 - https://github.com/prometheus/client_python
 
+## Folder structure
+
+- **app** contains a sample python flask app behind a nginx proxy
+
+- **grafana** contains the monitoring stack
+    - `provisioning` folder contains all files to automatically provision resources in Grafana like data sources
+
+- **iac** contains terraform configuration files to deploy the stack on a EC2 instance in AWS
+
 ## Deploy locally
 ```bash
 git clone https://github.com/andregri/docker-compose-grafana.git

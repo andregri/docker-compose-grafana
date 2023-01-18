@@ -92,35 +92,12 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     depends_on:
       - gateway
-    entrypoint:
-      - sh
-      - -euc
-      - |
-        mkdir -p /etc/grafana/provisioning/datasources
-        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
-        apiVersion: 1
-        datasources:
-          - name: Loki
-            type: loki
-            access: proxy
-            url: http://gateway:3100
-            jsonData:
-              httpHeaderName1: "X-Scope-OrgID"
-            secureJsonData:
-              httpHeaderValue1: "tenant1"
-          - name: Prometheus
-            type: prometheus
-            access: proxy
-            url: http://prometheus:9090
-            jsonData:
-              httpMethod: "POST"
-        EOF
-        /run.sh
     ports:
       - "3000:3000"
     volumes:
       - ./config/grafana.ini:/etc/grafana/grafana.ini
       - ./config/dashboard.yaml:/etc/grafana/provisioning/dashboards/main.yaml
+      - ./provisioning/datasources.yaml:/etc/grafana/provisioning/datasources/main.yaml
       - ./dashboards:/var/lib/grafana/dashboards
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1" ]
