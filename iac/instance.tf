@@ -25,8 +25,8 @@ sudo chmod +x /usr/local/bin/docker-compose
 
 sudo apt install -y git
 git clone https://github.com/andregri/docker-compose-grafana.git
-docker-compose -f docker-compose-grafana/grafana/docker-compose.yaml up -d
 docker-compose -f docker-compose-grafana/app/docker-compose.yaml up -d
+docker-compose -f docker-compose-grafana/grafana/docker-compose.yaml up -d
 EOF
 
   tags = {
