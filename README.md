@@ -39,24 +39,27 @@ terraform apply
 max(100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes)) by (instance)
 ```
 
-## Monitor custom jobs
-
-Example to monitor a data from a database, you have some options
-
-### Add a Grafana data source
+## Add a db to Grafana data sources to monitor custom data
 
 You can add a data source connected to your db.
 
 - Edit `grafana/docker-compose.yaml` to make sure grafana is in the same the network of the db
 - Edit `grafana/provisioning/datasources.yaml`:
 ```yaml
-- name: MySQL
+apiVersion: 1
+
+datasources:
+  - name: MySQL
     type: mysql
-    access: proxy
-    url: http://db:3306
-    user:
-    password:
-    db:
+    url: db:3306
+    database: grafana
+    user: grafana
+    jsonData:
+      maxOpenConns: 0 # Grafana v5.4+
+      maxIdleConns: 2 # Grafana v5.4+
+      connMaxLifetime: 14400 # Grafana v5.4+
+    secureJsonData:
+      password: ${GRAFANA_MYSQL_PASSWORD}
 ```
 
 **PROS**:
@@ -65,7 +68,7 @@ You can add a data source connected to your db.
 **CONS**:
 - the refresh frequency depends on the frequecy of the dashboard
 
-### Send data to pushgateway using a bash script
+## Send data to pushgateway using a bash script
 
 [Stackoverflow guide](https://stackoverflow.com/questions/37458287/how-to-run-a-cron-job-inside-a-docker-container) that explaiins how to execute a cronjob on a docker container.
 
@@ -101,7 +104,7 @@ echo "mariadb_blog_records_from_bash_total $RECORDS_COUNT" | curl --data-binary 
 - complex to parse metrics for pushgateway
 - readability
 
-### Send data to pushgateway using a python script
+## Send data to pushgateway using a python script
 
 1. Create a shell script in `monitoring_jobs/scripts/` directory, for instance `mysql-count-records.py`. Below, the code snippet to send a metric to pushgateway:
 ```python
