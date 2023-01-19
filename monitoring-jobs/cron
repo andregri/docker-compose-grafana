@@ -1,0 +1,6 @@
+# must be ended with a new line "LF" (Unix) and not "CRLF" (Windows)
+* * * * * echo "I am a test" >> /var/log/cron.log 2>&1                      # every minute
+* * * * * bash /scripts/mysql-count-records.sh >> /var/log/cron.log 2>&1    # every minute
+* * * * * python3 /scripts/mysql-count-records.py >> /var/log/cron.log 2>&1    # every minute
+# 0 9 * * * bash /scripts/mysql-count-records.sh >> /var/log/cron.log 2>&1    # every day at 9
+# An empty line is required at the end of this file for a valid cron file.

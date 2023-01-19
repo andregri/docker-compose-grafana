@@ -11,6 +11,8 @@
 
 - **iac** contains terraform configuration files to deploy the stack on a EC2 instance in AWS
 
+- **monitoring-jobs** contains shell scripts and/or python scripts that push custom metrics to pushgateway periodically.
+
 ## Deploy locally
 ```bash
 git clone https://github.com/andregri/docker-compose-grafana.git
@@ -37,11 +39,98 @@ terraform apply
 max(100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes)) by (instance)
 ```
 
-## pushgateway example
+## Monitor custom jobs
 
-```bash
-echo "some_metric 3.14" | curl --data-binary @- http://pushgateway.example.org:9091/metrics/job/some_job
+Example to monitor a data from a database, you have some options
+
+### Add a Grafana data source
+
+You can add a data source connected to your db.
+
+- Edit `grafana/docker-compose.yaml` to make sure grafana is in the same the network of the db
+- Edit `grafana/provisioning/datasources.yaml`:
+```yaml
+- name: MySQL
+    type: mysql
+    access: proxy
+    url: http://db:3306
+    user:
+    password:
+    db:
 ```
+
+**PROS**:
+- easy to setup
+
+**CONS**:
+- the refresh frequency depends on the frequecy of the dashboard
+
+### Send data to pushgateway using a bash script
+
+[Stackoverflow guide](https://stackoverflow.com/questions/37458287/how-to-run-a-cron-job-inside-a-docker-container) that explaiins how to execute a cronjob on a docker container.
+
+[crontab.guru](https://crontab.guru) helps to understand cronjob format.
+
+1. Create a shell script in `monitoring_jobs/scripts/` directory, for instance `mysql-count-records.sh`:
+```bash
+# Obtain the data
+# Crontab can't read env variables from docker-compose... so parameters are hardcoded
+RECORDS_COUNT=$(mysql --silent --host db --user root --password="$(cat /run/secrets/db-password)" --execute "SELECT COUNT(*) FROM blog" example)
+
+# Keep only the last line that contains the query result
+echo $RECORDS_COUNT | tail -1
+
+# Send the data to pushgateway
+echo "mariadb_blog_records_from_bash_total $RECORDS_COUNT" | curl --data-binary @- http://pushgateway:9091/metrics/job/bash
+```
+
+2. Add a cronjob to `monitoring_jobs/cron`
+```bash
+* * * * * bash /scripts/mysql-count-records.sh >> /var/log/cron.log 2>&1    # every minute
+```
+
+3. Setup `monitoring_jobs/Dockerfile` to install the required dependencies
+
+4. Start the containers: `docker-compose up -d --build`
+
+**PROS**:
+- shell script pros
+
+**CONS**:
+- unable to read env variables from docker-compose
+- complex to parse metrics for pushgateway
+- readability
+
+### Send data to pushgateway using a python script
+
+1. Create a shell script in `monitoring_jobs/scripts/` directory, for instance `mysql-count-records.py`. Below, the code snippet to send a metric to pushgateway:
+```python
+def push_metric(metric):
+    registry = CollectorRegistry()
+    # Define the metric type as a Gauge: set metric name and description
+    # Metric name must be unique!
+    g = Gauge('mariadb_blog_records_from_python_total', 'Count of records in blog table', registry=registry)
+    # Set the metric value
+    g.set(metric)
+    # Send the metric to pushgateway
+    push_to_gateway('pushgateway:9091', job='python', registry=registry)
+```
+Prometheus [guideline](https://prometheus.io/docs/practices/naming) for naming metric.
+
+2. Add a cronjob to `monitoring_jobs/cron`. See [crontab.guru](https://crontab.guru) to understand cronjob format
+```bash
+* * * * * python3 /scripts/mysql-count-records.py >> /var/log/cron.log 2>&1    # every minute
+```
+
+3. Setup `monitoring_jobs/Dockerfile` to install the required dependencies with pip
+
+4. Start the containers: `docker-compose up -d --build`
+
+**PROS**:
+- python pros
+- readability
+
+**CONS**:
 
 ## configure smtp in Grafana
 

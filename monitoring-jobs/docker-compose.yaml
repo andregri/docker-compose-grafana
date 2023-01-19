@@ -1,0 +1,22 @@
+---
+version: "3"
+
+networks:
+  app_backnet:
+    external: true
+  grafana_monitoring:
+    external: true
+
+services:
+  mysql-cronjob:
+    build: .
+    secrets:
+      - db-password
+    restart: unless-stopped
+    networks:
+      - app_backnet
+      - grafana_monitoring
+
+secrets:
+  db-password:
+    file: ../app/nginx-flask-mysql/db/password.txt
