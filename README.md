@@ -39,7 +39,9 @@ terraform apply
 max(100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes)) by (instance)
 ```
 
-## Add a db to Grafana data sources to monitor custom data
+# Metrics from custom jobs
+
+## Grafana: Add a MySQL data sources
 
 You can add a data source connected to your db.
 
