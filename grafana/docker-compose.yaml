@@ -239,7 +239,7 @@ services:
     ports:
       - 9093:9093
     volumes:
-      - ./alertmanager-config.yaml:/etc/alertmanager/alertmanager-config.yaml
+      - ./alertmanager-config.yaml:/etc/alertmanager/config.yaml
     restart: always
     command:
       - '-config.file=/etc/alertmanager/config.yml'
