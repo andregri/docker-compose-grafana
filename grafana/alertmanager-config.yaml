@@ -1,9 +1,8 @@
 global:
   # The smarthost and SMTP sender used for mail notifications.
-  smtp_smarthost: 'smtp.example.org:25'
-  smtp_from: 'admin@example.org'
-  smtp_auth_username: 'admin@example.org'
-  smtp_auth_password: 'password'
+  smtp_smarthost: 'mailhog:1025'
+  smtp_from: 'mail@example.org'
+  smtp_require_tls: false
 
 # The root route on which each incoming alert enters.
 route:
@@ -44,19 +43,15 @@ route:
 # We use this to mute any warning-level notifications if the same alert is
 # already critical.
 inhibit_rules:
-- source_matchers:
-    - severity="critical"
-  target_matchers:
-    - severity="warning"
-  # Apply inhibition if the alertname is the same.
-  # CAUTION: 
-  #   If all label names listed in `equal` are missing 
-  #   from both the source and target alerts,
-  #   the inhibition rule will apply!
-  equal: ['alertname']
+- source_match:
+    severity: critical
+  target_match:
+    severity: warning
+  equal:
+  - alertname
 
 
 receivers:
 - name: 'team-X-mails'
   email_configs:
-  - to: 'mail1@example.org, mail2@example.org'
+  - to: 'teamX@example.org'

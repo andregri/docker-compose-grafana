@@ -235,19 +235,27 @@ services:
       - app_frontnet
 
   alertmanager:
-    image: prom/alertmanager:v0.12.0
+    image: prom/alertmanager:v0.25.0
     ports:
       - 9093:9093
     volumes:
-      - ./alertmanager-config.yaml:/etc/alertmanager/config.yaml
+      - ./alertmanager-config.yaml:/etc/alertmanager/config.yml
     restart: always
     command:
-      - '-config.file=/etc/alertmanager/config.yml'
-      - '-storage.path=/alertmanager'
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
     healthcheck:
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9093/api/v1/status || exit 1" ]
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9093/api/v2/status || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - monitoring
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui
     networks:
       - monitoring
