@@ -7,7 +7,6 @@
 - **app** contains a sample python flask app behind a nginx proxy
 
 - **grafana** contains the monitoring stack
-    - `provisioning` folder contains all files to automatically provision resources in Grafana like data sources
 
 - **iac** contains terraform configuration files to deploy the stack on a EC2 instance in AWS
 
@@ -28,7 +27,54 @@ terraform init
 terraform apply
 ```
 
-## Alerting example
+# Alerts
+
+Alerts and notifications are configured with Prometheus that defines the alerting rule on the metrics and Alertmanager that listens to alerts and routes the notifications to the receivers.
+
+In the docker-compose manifest, there are the services: **prometheus**, **alertmanager**, and **mailhog** that is a local smtp server to test email notifications.
+
+1. To setup the communication between Prometheus and Alertmanager, add the **alerting** section to the configuration file of Prometheus `prometheus.yaml` to define the list of alertmanagers listening to alerts:
+```yaml
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+      - targets:
+        - alertmanager:9093
+```
+
+2. Always in the Prometheus configuration file `prometheus.yaml`, add the **rule_files** section to specify the file that defines the alerting rules:
+```yaml
+# Rule files specifies a list of globs. Rules and alerts are read from
+# all matching files.
+rule_files:
+  - rules.yaml
+```
+
+Also add the bind volume in the docker-compose:
+```yaml
+volumes:
+  - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+  - ./rules.yaml:/etc/prometheus/rules.yaml
+```
+
+3. Write the alerting expressions in the file `rules.yaml`. See an example in the Prometheus [documentation](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/).
+  - Visit `http://localhost:9090/rules` to list the groups and rules defined in `rules.yaml`.
+  - Visit `http://localhost:9090/alerts` to get the alert list pending or firing.
+
+4. Configure **alertmanager** using the file `alertmanager-config.yaml` to define smtp servers, alert routes, and receivers. See alertmanager official [documentation](https://prometheus.io/docs/alerting/latest/configuration/) for more information.
+  - **global** section configures global options like smtp server
+  - **route** section defines how incoming alerts are routed to the correct receiver. It can be nested to create more specific routes
+  - **inhibit_rules** section defines when to stop notifications (e.g. don't send notifications for 'warning' alerts when a 'critical' alert triggered)
+  - **receivers** section defines the communication endpoint (e.g. slack, email, etc.) for each receiver
+
+  - To test alertmanager, send an alert using curl:
+```bash
+curl -H 'Content-Type: application/json' -d '[{"labels":{"alertname":"myalert"}}]' http://localhost:9093/api/v2/alerts
+```
+  - Then visit alertmanager web ui `http://localhost:9093/#/alerts` and check there is a new alert *myalert* and visit the smtp server (if using mailhog, at `http://localhost:8025/`) to see the notification.
+
+## Example expressions
 
 - CPU usage:
 ```
