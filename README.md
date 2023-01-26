@@ -25,7 +25,14 @@ terraform init
 terraform apply
 ```
 
-# Alerts
+# Alerts and notifications
+
+There two possible solutions to add alerts and notification to the monitoring system:
+
+- **Prometheus** for alerts and **Alertmanager** for notifications. They are configurable by file provisioned through docker-compose.
+- **Grafana** unified alert manager that includes alerts and notifications. At the moment, it is configurable via UI and it is not possible to re-use configuration files like for dashboards and datasources.
+
+## Prometheus alerts and Alertmanager notifications
 
 Alerts and notifications are configured with Prometheus that defines the alerting rule on the metrics and Alertmanager that listens to alerts and routes the notifications to the receivers.
 
@@ -72,15 +79,31 @@ curl -H 'Content-Type: application/json' -d '[{"labels":{"alertname":"myalert"}}
 ```
   - Then visit alertmanager web ui `http://localhost:9093/#/alerts` and check there is a new alert *myalert* and visit the smtp server (if using mailhog, at `http://localhost:8025/`) to see the notification.
 
-## Example expressions
+# Grafana alerts and notifications
 
-- CPU usage:
-```
-100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
-```
-- Disk Usage
-```
-max(100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes)) by (instance)
+## configure smtp in Grafana
+
+To setup email notification in Grafana, modify smtp section in `/etc/grafana/grafana.ini`:
+- `host` for smtp server and port
+- `user` and `password` for smtp authentication
+- `from_name` and `from_address` for email info
+
+```ini
+[smtp]
+enabled = true
+host = mailhog:1025
+;user =
+# If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
+;password =
+;cert_file =
+;key_file =
+;skip_verify = false
+;from_address = admin@grafana.localhost
+;from_name = Grafana
+# EHLO identity in SMTP dialog (defaults to instance_name)
+;ehlo_identity = dashboard.example.com
+# SMTP startTLS policy (defaults to 'OpportunisticStartTLS')
+;startTLS_policy = NoStartTLS
 ```
 
 # Metrics from custom jobs
