@@ -1,7 +1,5 @@
 # Grafana on docker-compose
 
-- https://github.com/prometheus/client_python
-
 ## Folder structure
 
 - **app** contains a sample python flask app behind a nginx proxy
@@ -156,6 +154,11 @@ echo "mariadb_blog_records_from_bash_total $RECORDS_COUNT" | curl --data-binary 
 
 1. Create a shell script in `monitoring_jobs/scripts/` directory, for instance `mysql-count-records.py`. Below, the code snippet to send a metric to pushgateway:
 ```python
+from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
+import mysql.connector
+
+...
+
 def push_metric(metric):
     registry = CollectorRegistry()
     # Define the metric type as a Gauge: set metric name and description
@@ -166,7 +169,6 @@ def push_metric(metric):
     # Send the metric to pushgateway
     push_to_gateway('pushgateway:9091', job='python', registry=registry)
 ```
-Prometheus [guideline](https://prometheus.io/docs/practices/naming) for naming metric.
 
 2. Add a cronjob to `monitoring_jobs/cron`. See [crontab.guru](https://crontab.guru) to understand cronjob format
 ```bash
@@ -181,22 +183,8 @@ Prometheus [guideline](https://prometheus.io/docs/practices/naming) for naming m
 - python pros
 - readability
 
-**CONS**:
+## Resources
 
-## configure smtp in Grafana
+- Prometheus [guideline](https://prometheus.io/docs/practices/naming) for naming metric.
 
-Modify smtp section in `/etc/grafana/grafana.ini`
-
-```ini
-[smtp]
-enabled = true
-host = smtp.example.it:25
-user = mail@example.com
-# If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
-password = examplePassword3!
-;cert_file =
-;key_file =
-;skip_verify = false
-from_address = mail@example.com
-from_name = Grafana
-```
+- Prometheus client library [repository on Github](https://github.com/prometheus/client_python)
