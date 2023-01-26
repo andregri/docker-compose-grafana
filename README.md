@@ -211,3 +211,26 @@ def push_metric(metric):
 - Prometheus [guideline](https://prometheus.io/docs/practices/naming) for naming metric.
 
 - Prometheus client library [repository on Github](https://github.com/prometheus/client_python)
+
+# Logs with Loki and Promtail
+
+1. The `ruler` section of the `loki-config.yaml` file defines the folder where to find the rule file and alertmanager endpoint
+
+2. The `loki-rules.yaml` file works the same as the prometheus rule file. For example, the expression to monitor the rate of error logs of the container *app-flog-1* is:
+```
+sum(rate({container="app-flog-1"} |= "error" [5m])) by (job)
+  /
+sum(rate({container="app-flog-1"}[5m])) by (job)
+  > 0.05
+```
+
+3. To check that the Loki rules are loaded correctly:
+  - get the rule file from Loki: `http://localhost:3100/loki/api/v1/rules` or
+  - view parsed rules from Grafana interface: `http://localhost:3000/alerting/list`
+  ![List of alert rules from Grafana dashboard](img/grafana-rules.png)
+
+4. Like for prometheus, alerts are routed to receivers (like mail) by **alertmanager**
+
+## Resources
+- how to install loki and promtail on docker https://grafana.com/docs/loki/latest/installation/docker/
+- example of alerting rules for logs https://grafana.com/docs/loki/latest/rules/#example
