@@ -211,3 +211,7 @@ def push_metric(metric):
 - Prometheus [guideline](https://prometheus.io/docs/practices/naming) for naming metric.
 
 - Prometheus client library [repository on Github](https://github.com/prometheus/client_python)
+
+# Logs with Loki and Promtail
+
+- https://grafana.com/docs/loki/latest/installation/docker/
