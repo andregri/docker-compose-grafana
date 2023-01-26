@@ -20,7 +20,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./loki-config.yaml:/etc/loki/config.yaml
+      - ./config/loki-config.yaml:/etc/loki/config.yaml
       - ./config/loki-rules.yaml:/etc/loki/rules/fake/rules.yml
     networks:
       - loki
@@ -28,7 +28,7 @@ services:
   promtail:
     image: grafana/promtail:2.7.1
     volumes:
-      - ./promtail-local-config.yaml:/etc/promtail/config.yaml:ro
+      - ./config/promtail-local-config.yaml:/etc/promtail/config.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/config.yaml
     expose:
