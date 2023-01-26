@@ -1,7 +1,5 @@
 # Grafana on docker-compose
 
-- https://github.com/prometheus/client_python
-
 ## Folder structure
 
 - **app** contains a sample python flask app behind a nginx proxy
@@ -27,7 +25,14 @@ terraform init
 terraform apply
 ```
 
-# Alerts
+# Alerts and notifications
+
+There two possible solutions to add alerts and notification to the monitoring system:
+
+- **Prometheus** for alerts and **Alertmanager** for notifications. They are configurable by file provisioned through docker-compose.
+- **Grafana** unified alert manager that includes alerts and notifications. At the moment, it is configurable via UI and it is not possible to re-use configuration files like for dashboards and datasources.
+
+## Prometheus alerts and Alertmanager notifications
 
 Alerts and notifications are configured with Prometheus that defines the alerting rule on the metrics and Alertmanager that listens to alerts and routes the notifications to the receivers.
 
@@ -74,15 +79,31 @@ curl -H 'Content-Type: application/json' -d '[{"labels":{"alertname":"myalert"}}
 ```
   - Then visit alertmanager web ui `http://localhost:9093/#/alerts` and check there is a new alert *myalert* and visit the smtp server (if using mailhog, at `http://localhost:8025/`) to see the notification.
 
-## Example expressions
+# Grafana alerts and notifications
 
-- CPU usage:
-```
-100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
-```
-- Disk Usage
-```
-max(100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes)) by (instance)
+## configure smtp in Grafana
+
+To setup email notification in Grafana, modify smtp section in `/etc/grafana/grafana.ini`:
+- `host` for smtp server and port
+- `user` and `password` for smtp authentication
+- `from_name` and `from_address` for email info
+
+```ini
+[smtp]
+enabled = true
+host = mailhog:1025
+;user =
+# If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
+;password =
+;cert_file =
+;key_file =
+;skip_verify = false
+;from_address = admin@grafana.localhost
+;from_name = Grafana
+# EHLO identity in SMTP dialog (defaults to instance_name)
+;ehlo_identity = dashboard.example.com
+# SMTP startTLS policy (defaults to 'OpportunisticStartTLS')
+;startTLS_policy = NoStartTLS
 ```
 
 # Metrics from custom jobs
@@ -156,6 +177,11 @@ echo "mariadb_blog_records_from_bash_total $RECORDS_COUNT" | curl --data-binary 
 
 1. Create a shell script in `monitoring_jobs/scripts/` directory, for instance `mysql-count-records.py`. Below, the code snippet to send a metric to pushgateway:
 ```python
+from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
+import mysql.connector
+
+...
+
 def push_metric(metric):
     registry = CollectorRegistry()
     # Define the metric type as a Gauge: set metric name and description
@@ -166,7 +192,6 @@ def push_metric(metric):
     # Send the metric to pushgateway
     push_to_gateway('pushgateway:9091', job='python', registry=registry)
 ```
-Prometheus [guideline](https://prometheus.io/docs/practices/naming) for naming metric.
 
 2. Add a cronjob to `monitoring_jobs/cron`. See [crontab.guru](https://crontab.guru) to understand cronjob format
 ```bash
@@ -181,22 +206,8 @@ Prometheus [guideline](https://prometheus.io/docs/practices/naming) for naming m
 - python pros
 - readability
 
-**CONS**:
+## Resources
 
-## configure smtp in Grafana
+- Prometheus [guideline](https://prometheus.io/docs/practices/naming) for naming metric.
 
-Modify smtp section in `/etc/grafana/grafana.ini`
-
-```ini
-[smtp]
-enabled = true
-host = smtp.example.it:25
-user = mail@example.com
-# If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
-password = examplePassword3!
-;cert_file =
-;key_file =
-;skip_verify = false
-from_address = mail@example.com
-from_name = Grafana
-```
+- Prometheus client library [repository on Github](https://github.com/prometheus/client_python)
