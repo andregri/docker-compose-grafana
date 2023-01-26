@@ -5,7 +5,7 @@ groups:
       - record: node:cpu_load:avg
         expr: 1 - avg(irate(node_cpu_seconds_total{mode="idle",instance="node-exporter:9100"}[5m]))
       - alert: high_cpu_load
-        expr: node:cpu_load:avg > .05
+        expr: node:cpu_load:avg > .9
         for: 5m
         annotations:
-          overview: 'CPU load of instance {{ $labels }} is {{  printf "%.2f" $value }}%'
+          overview: 'CPU load is {{  printf "%.2f" $value }}%'
