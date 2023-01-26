@@ -1,0 +1,17 @@
+groups:
+  - name: log-rate
+    rules:
+      - alert: HighLogRate
+        expr: |
+          sum(rate({container="app-flog-1"} |= "error" [5m])) by (job)
+            /
+          sum(rate({container="app-flog-1"}[5m])) by (job)
+            > 0.05
+        for: 1m
+        labels:
+          severity: warning
+          team: devops
+          category: logs
+        annotations:
+          title: "High LogRate Alert"
+          description: "something is logging a lot"
