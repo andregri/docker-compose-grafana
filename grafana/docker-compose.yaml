@@ -202,6 +202,7 @@ services:
     user: root # you might need this because prometheus container starts with 'nobody' user
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - ./rules.yaml:/etc/prometheus/rules.yaml
       - ./prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yaml'
@@ -209,8 +210,8 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
-    expose:
-      - 9090
+    ports:
+      - "9090:9090"
     networks:
       - monitoring
       - app_frontnet
@@ -232,3 +233,29 @@ services:
     networks:
       - monitoring
       - app_frontnet
+
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    ports:
+      - 9093:9093
+    volumes:
+      - ./alertmanager-config.yaml:/etc/alertmanager/config.yml
+    restart: always
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9093/api/v2/status || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitoring
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui
+    networks:
+      - monitoring

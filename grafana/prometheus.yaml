@@ -1,5 +1,18 @@
 global:
   scrape_interval: 1m
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+      - targets:
+        - alertmanager:9093
+
+# Rule files specifies a list of globs. Rules and alerts are read from
+# all matching files.
+rule_files:
+  - rules.yaml
 
 scrape_configs:
   - job_name: "prometheus"
