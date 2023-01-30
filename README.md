@@ -113,7 +113,7 @@ host = mailhog:1025
 You can add a data source connected to your db.
 
 - Edit `grafana/docker-compose.yaml` to make sure grafana is in the same the network of the db
-- Edit `grafana/provisioning/datasources.yaml`:
+- Edit `grafana/config/datasources.yaml`:
 ```yaml
 apiVersion: 1
 
