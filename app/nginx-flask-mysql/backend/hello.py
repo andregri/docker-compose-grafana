@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 import mysql.connector
+from pymongo import MongoClient
 
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from prometheus_client import make_wsgi_app
@@ -35,6 +36,8 @@ class DBManager:
 
 app = Flask(__name__)
 
+client = MongoClient("mongo:27017")
+
 # Add prometheus wsgi middleware to route /metrics requests
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
     '/metrics': make_wsgi_app()
@@ -54,6 +57,15 @@ def listBlog():
     for c in rec:
         response = response  + '<div>   Hello  ' + c + '</div>'
     return response
+
+
+@app.route('/mongodb')
+def todo():
+    try:
+        client.admin.command('ismaster')
+    except:
+        return "Server not available"
+    return "Hello from the MongoDB client!\n"
 
 
 if __name__ == '__main__':

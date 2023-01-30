@@ -33,6 +33,11 @@ services:
       - 3306
       - 33060
 
+  mongo:
+    image: mongo
+    networks:
+      - backnet
+
   backend:
     build:
       context: nginx-flask-mysql/backend
