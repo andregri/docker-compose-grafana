@@ -124,7 +124,7 @@ services:
     image: bitnami/mongodb-exporter:latest
     command: --compatible-mode --collect-all --mongodb.uri=mongodb://mongo:27017
     ports:
-      - 9216:9216
+      - 9216
       - 17001
     networks:
       - monitoring
