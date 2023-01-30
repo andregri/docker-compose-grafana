@@ -108,6 +108,49 @@ host = mailhog:1025
 
 # Metrics from app (Flask, Nginx, Mongodb)
 
+## Nginx
+
+The docker-compose stack for monitoring includes the **nginx-exporter** ([Github repository](https://github.com/nginxinc/nginx-prometheus-exporter)) to collect metrics from the nginx server:
+```yaml
+nginx-exporter:
+  image: nginx/nginx-prometheus-exporter:0.10.0
+  expose:
+    - 9113
+  command: -nginx.scrape-uri=http://proxy:80/stub_status
+  networks:
+    - monitoring
+    - app_frontnet
+```
+
+- The exporter is added to the **frontnet** network where the nginx container is attached to.
+- `-nginx.scrape-uri` options defines the endpoint where nginx expose the metrics. The endpoint **/stub_status** is activated in the conf file of nginx:
+```conf
+server {
+    listen       80;
+    server_name  localhost;
+    location / {
+        proxy_pass   http://backend:8000;
+    }
+
+    location /stub_status {
+        stub_status;
+    }
+}
+```
+
+The exporter is added to the **prometheus** configuration file `config/prometheus.yaml`, under `scrape_config` object:
+```yaml
+scrape_configs:
+  # other targets
+  # ...
+
+  - job_name: 'nginx-website'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+```
+
 ## Mongodb
 
 The docker-compose stack for monitoring includes the **mongodb-exporter** ([Github repository](https://github.com/percona/mongodb_exporter)) to collect metrics from the mongodb instance:
