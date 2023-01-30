@@ -106,6 +106,45 @@ host = mailhog:1025
 ;startTLS_policy = NoStartTLS
 ```
 
+# Metrics from app (Flask, Nginx, Mongodb)
+
+## Mongodb
+
+The docker-compose stack for monitoring includes the **mongodb-exporter** ([Github repository](https://github.com/percona/mongodb_exporter)) to collect metrics from the mongodb instance:
+
+```yaml
+# grafana/docker-compose.yaml
+mongodb-exporter:
+  image: bitnami/mongodb-exporter:latest
+  command: --compatible-mode --collect-all --mongodb.uri=mongodb://mongo:27017
+  ports:
+    - 9216
+    - 17001
+  networks:
+    - monitoring
+    - app_backnet
+```
+
+- The exporter is added to the **backnet** network where the mongodb is attached to.
+- `--compatible-mode` to tell mongodb-exporter to use the old metrics labels.
+- `--collect-all` to expose all mongodb metrics
+- the metrics are available at `:9216/metrics`
+
+The exporter is added to the **prometheus** configuration file `config/prometheus.yaml`, under `scrape_config` object:
+```yaml
+scrape_configs:
+  # other targets
+  # ...
+
+  - job_name: "mongodb"
+    static_configs:
+      - targets: ["mongodb-exporter:9216"]
+```
+
+The Grafana dashboard to visualize the mongodb metrics is provisioned through the file `dashboards/mongodb.json`.
+
+![Grafana dashboard for mongodb metrics](img/mongodb-dashboard.png)
+
 # Metrics from custom jobs
 
 ## Grafana: Add a MySQL data sources
