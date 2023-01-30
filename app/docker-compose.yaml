@@ -35,6 +35,8 @@ services:
 
   mongo:
     image: mongo
+    expose:
+      - 27017
     networks:
       - backnet
 
