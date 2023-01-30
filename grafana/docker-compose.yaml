@@ -85,8 +85,8 @@ services:
     restart: unless-stopped
     user: root # you might need this because prometheus container starts with 'nobody' user
     volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
-      - ./rules.yaml:/etc/prometheus/rules.yaml
+      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - ./config/prometheus-rules.yaml:/etc/prometheus/rules.yaml
       - ./prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yaml'
